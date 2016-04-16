@@ -1,0 +1,92 @@
+name: "demo-topology"
+
+components:
+  - id: "stringScheme"
+    className: "org.apache.storm.kafka.StringScheme"
+
+  - id: "stringMultiScheme"
+    className: "org.apache.storm.spout.SchemeAsMultiScheme"
+    constructorArgs:
+      - ref: "stringScheme"
+
+  - id: "zkHosts"
+    className: "org.apache.storm.kafka.ZkHosts"
+    constructorArgs:
+      - "localhost:2181"
+
+# Alternative kafka config
+#  - id: "kafkaConfig"
+#    className: "org.apache.storm.kafka.KafkaConfig"
+#    constructorArgs:
+#      # brokerHosts
+#      - ref: "zkHosts"
+#      # topic
+#      - "myKafkaTopic"
+#      # clientId (optional)
+#      - "myKafkaClientId"
+
+  - id: "spoutConfig"
+    className: "org.apache.storm.kafka.SpoutConfig"
+    constructorArgs:
+      # brokerHosts
+      - ref: "zkHosts"
+      # topic
+      - "myKafkaTopic"
+      # zkRoot
+      - "/kafkaSpout"
+      # id
+      - "myId"
+    properties:
+      - name: "ignoreZkOffsets"
+        value: true
+      - name: "scheme"
+        ref: "stringMultiScheme"
+
+
+config:
+  topology.workers: 1
+
+
+spouts:
+  - id: "kafka-spout"
+    className: "org.apache.storm.kafka.KafkaSpout"
+    constructorArgs:
+      - ref: "spoutConfig"
+
+bolts:
+  - id: "bolt-split"
+    className: "my.fosscomm2016.demo.SplitBolt"
+    parallelism: 1
+
+  - id: "bolt-count"
+    className: "my.fosscomm2016.demo.SplitBolt"
+    parallelism: 1
+
+  - id: "bolt-kafka"
+    className: "org.apache.storm.kafka.bolt.KafkaBolt"
+    parallelism: 1
+    
+  - id: "log"
+    className: "org.apache.storm.flux.wrappers.bolts.LogInfoBolt"
+    parallelism: 1
+
+streams:
+  - name: "kafka --> split" # name isn't used (placeholder for logging, UI, etc.)
+    from: "kafka-spout"
+    to: "bolt-split"
+    grouping:
+      type: LOCAL_OR_SHUFFLE
+
+  - name: "split --> count"
+    from: "bolt-split"
+    to: "bolt-count"
+    grouping:
+      type: FIELDS
+      args: ["word"]
+
+  - name: "count --> kafka"
+    from: "bolt-count"
+    #to: "bolt-kafka"
+    to: "log"
+    grouping:
+      type: LOCAL_OR_SHUFFLE
