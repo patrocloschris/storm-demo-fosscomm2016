@@ -13,6 +13,35 @@ components:
     className: "org.apache.storm.kafka.ZkHosts"
     constructorArgs:
       - "localhost:2181"
+      
+  - id: "topicSelector"
+    className: "org.apache.storm.kafka.bolt.selector.DefaultTopicSelector"
+    constructorArgs:
+      - "myKafkaTopicOut"
+
+  - id: "kafkaMapper"
+    className: "org.apache.storm.kafka.bolt.mapper.FieldNameBasedTupleToKafkaMapper"
+
+  - id: "kafkaProducerProps"
+    className: "java.util.Properties"
+    configMethods:
+      - name: "put"
+        args:
+          - "bootstrap.servers"
+          - "localhost:9092"
+      - name: "put"
+        args:
+          - "acks"
+          - "1"
+      - name: "put"
+        args:
+          - "key.serializer"
+          - "org.apache.kafka.common.serialization.StringSerializer"
+      - name: "put"
+        args:
+          - "value.serializer"
+          - "org.apache.kafka.common.serialization.StringSerializer"    
+
 
 # Alternative kafka config
 #  - id: "kafkaConfig"
@@ -61,14 +90,21 @@ bolts:
   - id: "bolt-count"
     className: "my.fosscomm2016.demo.CountBolt"
     parallelism: 1
-
-  - id: "bolt-kafka"
-    className: "org.apache.storm.kafka.bolt.KafkaBolt"
-    parallelism: 1
     
   - id: "log"
     className: "org.apache.storm.flux.wrappers.bolts.LogInfoBolt"
     parallelism: 1
+    
+  - id: "bolt-kafka"
+    className: "org.apache.storm.kafka.bolt.KafkaBolt"
+    parallelism: 1
+    configMethods:
+      - name: "withProducerProperties"
+        args: [ref: "kafkaProducerProps"]
+      - name: "withTopicSelector"
+        args: [ref: "topicSelector"]
+      - name: "withTupleToKafkaMapper"
+        args: [ref: "kafkaMapper"]
 
 streams:
   - name: "kafka --> split" # name isn't used (placeholder for logging, UI, etc.)
@@ -84,9 +120,14 @@ streams:
       type: FIELDS
       args: ["word"]
 
+  - name: "count --> log"
+    from: "bolt-count"
+    to: "log"
+    grouping:
+      type: LOCAL_OR_SHUFFLE
+
   - name: "count --> kafka"
     from: "bolt-count"
-    #to: "bolt-kafka"
-    to: "log"
+    to: "bolt-kafka"
     grouping:
       type: LOCAL_OR_SHUFFLE

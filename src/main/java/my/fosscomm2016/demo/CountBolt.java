@@ -32,12 +32,12 @@ public class CountBolt extends BaseRichBolt {
    }
 
    public void declareOutputFields(OutputFieldsDeclarer declarer) {
-      declarer.declare(new Fields("word", "count"));
+      declarer.declare(new Fields("key", "message"));
    }
 
    public void execute(Tuple tuple) {
       if (isTickTuple(tuple)) {
-         LOG.info("Recieve a tick Tuple. Sending results to Kafka");
+         LOG.info("Recieve a tick Tuple. Sending results to NEXT");
          for (String key : counts.keySet()) {
             String result = key.concat("(" + counts.get(key) + " times)");
             collector.emit(new Values(key, result));
