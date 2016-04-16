@@ -59,7 +59,7 @@ bolts:
     parallelism: 1
 
   - id: "bolt-count"
-    className: "my.fosscomm2016.demo.SplitBolt"
+    className: "my.fosscomm2016.demo.CountBolt"
     parallelism: 1
 
   - id: "bolt-kafka"
