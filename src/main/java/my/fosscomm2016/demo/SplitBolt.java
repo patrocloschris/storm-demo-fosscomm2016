@@ -32,7 +32,7 @@ public class SplitBolt extends BaseRichBolt {
 
    public void execute(Tuple tuple) {
       String sentence = tuple.getString(0);
-      LOG.info("Recieve a new sentence");
+      LOG.info("Receive a new sentence");
       for (String word : sentence.split("\\s+")) {
          collector.emit(new Values(word, 1));
       }

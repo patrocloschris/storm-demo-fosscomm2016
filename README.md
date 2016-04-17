@@ -3,9 +3,9 @@
 This project is the demo of our presentation in FOSSCOMM 2016. 
 
 ## Requirements
-- Zookeeper
-- Kafka
-- Storm
+- Zookeeper (3.4.5+)
+- Kafka (0.8.2.2 or 0.9.x) (for 0.9 need to remove exclusion from pom.xml)
+- Storm (1.0)
 
 Start all the above:
 
@@ -15,8 +15,8 @@ Start all the above:
 
 ## Create Kafka Topics
 
-- ``` bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic myKafkaTopic ```
-- ``` bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic myKafkaTopicOut ```
+- ``` bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 2 --topic myKafkaTopic ```
+- ``` bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 2 --topic myKafkaTopicOut ```
 
 ### Check Topics
 

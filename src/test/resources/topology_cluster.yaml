@@ -1,0 +1,134 @@
+name: "fosscomm2016-demo-topology"
+
+components:
+  - id: "stringScheme"
+    className: "org.apache.storm.kafka.StringScheme"
+
+  - id: "stringMultiScheme"
+    className: "org.apache.storm.spout.SchemeAsMultiScheme"
+    constructorArgs:
+      - ref: "stringScheme"
+
+  - id: "zkHosts"
+    className: "org.apache.storm.kafka.ZkHosts"
+    constructorArgs:
+      - "localhost:2181"
+      
+  - id: "topicSelector"
+    className: "org.apache.storm.kafka.bolt.selector.DefaultTopicSelector"
+    constructorArgs:
+      - "myKafkaTopicOut"
+
+  - id: "kafkaMapper"
+    className: "org.apache.storm.kafka.bolt.mapper.FieldNameBasedTupleToKafkaMapper"
+
+  - id: "kafkaProducerProps"
+    className: "java.util.Properties"
+    configMethods:
+      - name: "put"
+        args:
+          - "bootstrap.servers"
+          - "localhost:9092"
+      - name: "put"
+        args:
+          - "acks"
+          - "1"
+      - name: "put"
+        args:
+          - "key.serializer"
+          - "org.apache.kafka.common.serialization.StringSerializer"
+      - name: "put"
+        args:
+          - "value.serializer"
+          - "org.apache.kafka.common.serialization.StringSerializer"    
+
+
+# Alternative kafka config
+#  - id: "kafkaConfig"
+#    className: "org.apache.storm.kafka.KafkaConfig"
+#    constructorArgs:
+#      # brokerHosts
+#      - ref: "zkHosts"
+#      # topic
+#      - "myKafkaTopic"
+#      # clientId (optional)
+#      - "myKafkaClientId"
+
+  - id: "spoutConfig"
+    className: "org.apache.storm.kafka.SpoutConfig"
+    constructorArgs:
+      # brokerHosts
+      - ref: "zkHosts"
+      # topic
+      - "myKafkaTopic"
+      # zkRoot
+      - "/kafkaSpout"
+      # id
+      - "myId"
+    properties:
+      - name: "ignoreZkOffsets"
+        value: true
+      - name: "scheme"
+        ref: "stringMultiScheme"
+
+
+config:
+  topology.workers: 2
+
+
+spouts:
+  - id: "kafka-spout"
+    className: "org.apache.storm.kafka.KafkaSpout"
+    constructorArgs:
+      - ref: "spoutConfig"
+    parallelism: 2
+
+bolts:
+  - id: "bolt-split"
+    className: "my.fosscomm2016.demo.SplitBolt"
+    parallelism: 2
+
+  - id: "bolt-count"
+    className: "my.fosscomm2016.demo.CountBolt"
+    parallelism: 2
+    
+  - id: "log"
+    className: "org.apache.storm.flux.wrappers.bolts.LogInfoBolt"
+    parallelism: 2
+    
+  - id: "bolt-kafka"
+    className: "org.apache.storm.kafka.bolt.KafkaBolt"
+    parallelism: 2
+    configMethods:
+      - name: "withProducerProperties"
+        args: [ref: "kafkaProducerProps"]
+      - name: "withTopicSelector"
+        args: [ref: "topicSelector"]
+      - name: "withTupleToKafkaMapper"
+        args: [ref: "kafkaMapper"]
+
+streams:
+  - name: "kafka --> split" # name isn't used (placeholder for logging, UI, etc.)
+    from: "kafka-spout"
+    to: "bolt-split"
+    grouping:
+      type: LOCAL_OR_SHUFFLE
+
+  - name: "split --> count"
+    from: "bolt-split"
+    to: "bolt-count"
+    grouping:
+      type: FIELDS
+      args: ["word"]
+
+  - name: "count --> log"
+    from: "bolt-count"
+    to: "log"
+    grouping:
+      type: LOCAL_OR_SHUFFLE
+
+  - name: "count --> kafka"
+    from: "bolt-count"
+    to: "bolt-kafka"
+    grouping:
+      type: LOCAL_OR_SHUFFLE
