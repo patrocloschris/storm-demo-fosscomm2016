@@ -1,4 +1,4 @@
-name: "demo-topology"
+name: "fosscomm2016-demo-topology"
 
 components:
   - id: "stringScheme"

@@ -1,6 +1,8 @@
 package my.fosscomm2016.demo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -22,7 +24,8 @@ public class CountBolt extends BaseRichBolt {
    private OutputCollector collector = null;
    private TopologyContext context = null;
    private Map conf = null;
-   private Map<String, Integer> counts = new HashMap<String, Integer>();
+   private Map<String, Integer> counts = new HashMap<>();
+   private List<Tuple> tuples = new ArrayList<>();
    private int tickTuple = 5;
 
    public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
@@ -37,12 +40,19 @@ public class CountBolt extends BaseRichBolt {
 
    public void execute(Tuple tuple) {
       if (isTickTuple(tuple)) {
-         LOG.info("Recieve a tick Tuple. Sending results to NEXT");
-         for (String key : counts.keySet()) {
-            String result = key.concat("(" + counts.get(key) + " times)");
-            collector.emit(new Values(key, result));
+         if (!counts.isEmpty()) {
+            LOG.info("Receive a tick Tuple. Sending results to NEXT");
+            for (String key : counts.keySet()) {
+               String result = key.concat("(" + counts.get(key) + " times)");
+               collector.emit(new Values(key, result));
+            }
          }
+         for (Tuple t : tuples) {
+            collector.ack(t);
+         }
+         tuples.clear();
          counts.clear();
+         collector.ack(tuple);
       } else {
          String word = tuple.getString(0);
          Integer count = counts.get(word);
@@ -51,6 +61,7 @@ public class CountBolt extends BaseRichBolt {
          count++;
          LOG.info("Word=[" + word + "] increasing counter from [" + count + "] to [" + (count - 1) + "]");
          counts.put(word, count);
+         tuples.add(tuple);
       }
    }
 
