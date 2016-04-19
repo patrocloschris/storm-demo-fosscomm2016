@@ -1,6 +1,16 @@
-# storm-demo-fosscomm2016
+# storm-demo-fosscomm-2016
 
-This project is the demo of our presentation in FOSSCOMM 2016. 
+This project is the demo of our presentation at FOSSCOMM (2016) conference. 
+
+Event: [Big Data Streaming processing using Apache Storm‏](http://fosscomm.cs.unipi.gr/index.php/event/adrianos-dadis/?lang=en)
+
+
+## Maintainers
+
+- @qiozas
+- @patrocloschris
+
+Question & Comments : [@qiozas](https://twitter.com/qiozas)
 
 ## Requirements
 - Zookeeper (3.4.5+)
