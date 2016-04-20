@@ -24,9 +24,9 @@ public class CountBolt extends BaseRichBolt {
    private OutputCollector collector = null;
    private TopologyContext context = null;
    private Map conf = null;
-   private Map<String, Integer> counts = new HashMap<>();
+   private Map<String, Long> counts = new HashMap<>();
    private List<Tuple> tuples = new ArrayList<>();
-   private int tickTuple = 5;
+   private int tickTuple = 1; //Aggregation time period (secs)
 
    public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
       this.conf = conf;
@@ -40,7 +40,7 @@ public class CountBolt extends BaseRichBolt {
 
    public void execute(Tuple tuple) {
       if (isTickTuple(tuple)) {
-         if (!counts.isEmpty()) {
+         if (!tuples.isEmpty()) {
             LOG.info("Receive a tick Tuple. Sending results to NEXT");
             for (String key : counts.keySet()) {
                String result = key.concat("(" + counts.get(key) + " times)");
@@ -50,14 +50,19 @@ public class CountBolt extends BaseRichBolt {
          for (Tuple t : tuples) {
             collector.ack(t);
          }
+
          tuples.clear();
-         counts.clear();
+
+         //Uncomment this for micro aggregations 
+         //counts.clear();
+
          collector.ack(tuple);
       } else {
          String word = tuple.getString(0);
-         Integer count = counts.get(word);
+         Long count = counts.get(word);
          if (count == null)
-            count = 0;
+            count = 0L;
+
          count++;
          LOG.info("Word=[" + word + "] increasing counter from [" + count + "] to [" + (count - 1) + "]");
          counts.put(word, count);
