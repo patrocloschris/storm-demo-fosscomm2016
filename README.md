@@ -12,8 +12,6 @@ FOSSCOMM Event: [Big Data Streaming processing using Apache Storm‏](http://fos
 - [@qiozas](https://github.com/qiozas) (Adrianos Dadis)
 - [@patrocloschris](https://github.com/patrocloschris) (Patroclos Christou)
 
-Question & Comments : [@qiozas](https://twitter.com/qiozas) (Twitter)
-
 ## Requirements
 - Zookeeper (3.4.5+)
 - Kafka (0.8.2.2 or 0.9.x) (for 0.9 need to remove exclusion from pom.xml)
