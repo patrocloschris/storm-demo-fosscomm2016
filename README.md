@@ -38,7 +38,7 @@ Local:
 - ``` storm jar target/StormKafkaDemo-0.1.jar org.apache.storm.flux.Flux --local src/test/resources/topology.yaml ``` 
 
 Remote:
-- ``` storm jar target/StormKafkaDemo-0.1.jar org.apache.storm.flux.Flux --remote src/test/resources/topology.yaml ``` 
+- ``` storm jar target/StormKafkaDemo-0.1.jar org.apache.storm.flux.Flux --remote src/test/resources/topology_cluster.yaml ``` 
 
 
 ## Check result
